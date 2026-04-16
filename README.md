@@ -122,7 +122,7 @@ npm run dev
 
 ---
 
-## API (sample)
+## API
 
 ```
 POST /api/auth/register
