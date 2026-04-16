@@ -1,68 +1,79 @@
-# 🚀 SwiftrideX
+# SwiftrideX 🚀
 
-A modern ride-hailing web application inspired by Uber, built with real-time tracking, driver matching, and a polished dark UI.
+SwiftrideX is a full-stack ride-hailing web app inspired by apps like Uber. It focuses on real-time ride updates, driver tracking, and a clean user experience.
 
-## ✨ Features
+---
 
-- Rider & Driver authentication with JWT
-- Real-time ride updates with Socket.io
-- Driver location tracking with Redis GEO
-- Smart nearest-driver matching
-- Interactive map with location search and autocomplete
-- "Use My Location" support
-- Ride lifecycle management:
-  - Request
-  - Accept
-  - Start
-  - Complete
-- Modern Tailwind CSS UI with responsive layouts
-- Google login support
+## Live Demo
 
-## 🛠️ Tech Stack
+Coming soon...
 
-### Frontend
-- React
-- Tailwind CSS
-- Axios
-- Socket.io-client
+---
 
-### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- Redis for geolocation and online driver tracking
-- JWT authentication
-- Socket.io
+## Features
 
-## 📁 Project Structure
+* User authentication for riders and drivers (JWT based)
+* Real-time ride updates using Socket.io
+* Driver location tracking using Redis
+* Nearest driver matching
+* Ride flow: request → accept → start → complete
+* Google login support
+* Map integration with search and current location
+* Responsive UI built with Tailwind CSS
 
-```text
+---
+
+## Tech Stack
+
+**Frontend**
+
+* React
+* Tailwind CSS
+* Axios
+* Socket.io-client
+
+**Backend**
+
+* Node.js
+* Express.js
+* MongoDB (Mongoose)
+* Redis
+* JWT
+* Socket.io
+
+---
+
+## Project Structure
+
+```
 SwiftrideX/
   backend/
   frontend/
-  README.md
-  .gitignore
 ```
 
-## ⚙️ Installation
+---
 
-### 1. Clone the repository
+## Setup
 
-```bash
+### 1. Clone the repo
+
+```
 git clone https://github.com/29di/SwiftRideX.git
 cd SwiftrideX
 ```
 
-### 2. Backend setup
+---
 
-```bash
+### 2. Backend
+
+```
 cd backend
 npm install
 ```
 
-Create a `backend/.env` file:
+Create a `.env` file inside backend:
 
-```env
+```
 PORT=5000
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_secret
@@ -70,79 +81,66 @@ REDIS_URL=your_redis_url
 GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-Run the backend:
+Run:
 
-```bash
+```
 npm run dev
 ```
 
-### 3. Frontend setup
+---
 
-```bash
-cd ../frontend
+### 3. Frontend
+
+```
+cd frontend
 npm install
 ```
 
-Create a `frontend/.env` file:
+Create a `.env` file inside frontend:
 
-```env
+```
 VITE_API_URL=http://localhost:5000/api
 VITE_SOCKET_URL=http://localhost:5000
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-Run the frontend:
+Run:
 
-```bash
+```
 npm run dev
 ```
 
-## 🚀 Usage
+---
 
-- Register as a rider or driver
-- Login with email/password or Google
-- Request a ride
-- Driver accepts the ride via the backend/API flow
-- Track the ride in real time with Socket.io
+## How it works (basic idea)
 
-## 🔐 Environment Variables
+* User requests a ride from frontend
+* Request goes to backend (Node + Express)
+* Nearby drivers are found using Redis
+* Ride updates are sent in real-time using Socket.io
+* Ride status changes as driver accepts and completes the trip
 
-### Backend
-- `PORT`
-- `MONGO_URI`
-- `JWT_SECRET`
-- `REDIS_URL`
-- `GOOGLE_CLIENT_ID`
+---
 
-### Frontend
-- `VITE_API_URL`
-- `VITE_SOCKET_URL`
-- `VITE_GOOGLE_CLIENT_ID`
+## API (sample)
 
-## ⚠️ Notes
-
-- Do not commit `.env` files.
-- Ensure MongoDB and Redis are running before starting the backend.
-- Update the frontend API URL if the backend runs on a non-default port.
-- Keep JWT and Google credentials private.
-
-## 📦 Deployment
-
-Suggested production targets:
-- Backend: Render
-- Frontend: Vercel
-
-## 🏁 Status
-
-Production-ready full-stack ride-hailing system 🚀
-
-## 🔗 Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit - SwiftrideX full stack app"
-git branch -M main
-git remote add origin https://github.com/29di/SwiftRideX.git
-git push -u origin main
 ```
+POST /api/auth/register
+POST /api/auth/login
+POST /api/rides/request
+GET  /api/rides/:id
+```
+
+---
+
+## Notes
+
+* `.env` files are not included in the repo
+* Make sure MongoDB and Redis are running
+* Update API URL if needed
+
+---
+
+## Status
+
+Project is working and can be extended further.
