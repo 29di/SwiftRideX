@@ -48,7 +48,7 @@ export default function RideHistoryPage() {
         <p className="text-sm text-slate-400">Review your completed and ongoing rides in one place.</p>
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="secondary" onClick={() => navigate('/rider')}>Back to overview</Button>
-          <Button variant="primary" onClick={() => navigate('/rider/book')}>Book new ride</Button>
+          <Button variant="primary" onClick={() => navigate('/rider')}>Request a ride</Button>
         </div>
       </Card>
 

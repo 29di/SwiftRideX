@@ -1,6 +1,14 @@
 import api, { getApiErrorMessage } from './api';
 
 export const rideService = {
+  estimateFare: async (payload) => {
+    try {
+      const response = await api.post('/rides/fare-estimate', payload);
+      return response.data;
+    } catch (error) {
+      throw new Error(getApiErrorMessage(error));
+    }
+  },
   requestRide: async (payload) => {
     try {
       const response = await api.post('/rides/request', payload);
@@ -50,6 +58,7 @@ export const rideService = {
     }
   },
   acceptRide: (rideId) => api.patch(`/rides/${rideId}/accept`).then((response) => response.data),
+  cancelRide: (rideId) => api.patch(`/rides/${rideId}/cancel`).then((response) => response.data),
   startRide: (rideId) => api.patch(`/rides/${rideId}/start`).then((response) => response.data),
   endRide: (rideId) => api.patch(`/rides/${rideId}/end`).then((response) => response.data),
 };

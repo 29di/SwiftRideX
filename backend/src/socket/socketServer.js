@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const driverService = require("../services/driverService");
+const rideChatService = require("../services/rideChatService");
 const rideModel = require("../models/rideModel");
 const logger = require("../config/logger");
 const { verifyJwtToken } = require("../utils/jwt");
@@ -108,6 +109,20 @@ const getSocketIdsByRole = (role) => {
   return Array.from(new Set(socketIds));
 };
 
+const emitRideChatMessageToParticipants = (audience, message) => {
+  if (!ioInstance || !audience) {
+    return;
+  }
+
+  const riderSocketIds = getSocketIdsByUser("rider", audience.riderId);
+  const driverSocketIds = getSocketIdsByUser("driver", audience.driverId);
+  const socketIds = Array.from(new Set([...riderSocketIds, ...driverSocketIds]));
+
+  for (const socketId of socketIds) {
+    ioInstance.to(socketId).emit("ride-chat-message", message);
+  }
+};
+
 const initializeSocketServer = (httpServer) => {
   if (ioInstance) {
     return ioInstance;
@@ -180,6 +195,15 @@ const initializeSocketServer = (httpServer) => {
       }
 
       try {
+        const activeRide = await rideModel.findActiveByDriverId(connectedUser.userId);
+
+        if (!activeRide?.id) {
+          socket.emit("socket-error", {
+            message: "No active ride available to associate driver location update",
+          });
+          return;
+        }
+
         const updatedDriver = await driverService.updateLocation(
           connectedUser.userId,
           latitude,
@@ -187,6 +211,7 @@ const initializeSocketServer = (httpServer) => {
         );
 
         const payload = {
+          rideId: String(activeRide.id),
           driverId: String(updatedDriver.id),
           latitude: updatedDriver.latitude,
           longitude: updatedDriver.longitude,
@@ -196,7 +221,6 @@ const initializeSocketServer = (httpServer) => {
         // Acknowledge update to the sending driver socket.
         socket.emit("driver-location-updated", payload);
 
-        const activeRide = await rideModel.findActiveByDriverId(connectedUser.userId);
         const targetRiderId = activeRide ? getRideRiderId(activeRide) : null;
 
         if (targetRiderId !== undefined && targetRiderId !== null) {
@@ -212,6 +236,40 @@ const initializeSocketServer = (httpServer) => {
           stack: error.stack,
         });
         socket.emit("socket-error", { message: error.message || "Failed to update driver location" });
+      }
+    });
+
+    socket.on("ride-chat-send", async ({ rideId, text, clientMessageId }) => {
+      if (!connectedUser || !connectedUser.userId || !connectedUser.role) {
+        socket.emit("socket-error", { message: "Socket user context is not available" });
+        return;
+      }
+
+      try {
+        const { message, audience } = await rideChatService.sendMessage({
+          role: connectedUser.role,
+          userId: connectedUser.userId,
+          rideId,
+          text,
+          metadata: {
+            via: "socket",
+            clientMessageId: clientMessageId || null,
+          },
+        });
+
+        emitRideChatMessageToParticipants(audience, message);
+        socket.emit("ride-chat-ack", {
+          rideId: String(rideId || ""),
+          clientMessageId: clientMessageId || null,
+          messageId: message.id,
+        });
+      } catch (error) {
+        logger.error("Ride chat send failed", {
+          socketId: socket.id,
+          rideId,
+          message: error.message,
+        });
+        socket.emit("socket-error", { message: error.message || "Failed to send chat message" });
       }
     });
 
@@ -233,4 +291,5 @@ module.exports = {
   getUserSocketMap,
   getSocketIdsByUser,
   getSocketIdsByRole,
+  emitRideChatMessageToParticipants,
 };

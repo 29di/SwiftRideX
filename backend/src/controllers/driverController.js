@@ -57,6 +57,19 @@ const updateLocation = async (req, res, next) => {
   }
 };
 
+const updateProfile = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    const driver = await driverService.updateName(req.user.id, name);
+    res.status(200).json({
+      message: 'Driver profile updated successfully',
+      driver,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getRideRequests = async (req, res, next) => {
   try {
     const rideService = require("../services/rideService");
@@ -67,11 +80,34 @@ const getRideRequests = async (req, res, next) => {
   }
 };
 
+const getRideHistory = async (req, res, next) => {
+  try {
+    const rideService = require('../services/rideService');
+    const rides = await rideService.getCompletedRideHistoryForDriver(req.user.id);
+    res.status(200).json({ rides });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRideDetail = async (req, res, next) => {
+  try {
+    const rideService = require('../services/rideService');
+    const ride = await rideService.getRideByIdForDriver(req.user.id, req.params.rideId);
+    res.status(200).json({ ride });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  updateProfile,
   toggleStatus,
   updateLocation,
   getRideRequests,
+  getRideHistory,
+  getRideDetail,
 };

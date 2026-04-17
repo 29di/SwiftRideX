@@ -1,9 +1,10 @@
 import Card from '../ui/Card';
+import Button from '../ui/Button';
 import StatusBadge from './StatusBadge';
 
 const formatValue = (value) => (value === null || value === undefined || value === '' ? '—' : value);
 
-export default function RideSummaryCard({ ride }) {
+export default function RideSummaryCard({ ride, onTrack }) {
   const driverName = ride?.driver?.name || (ride?.driverId ? 'Assigned driver' : null);
 
   if (!ride) {
@@ -49,6 +50,14 @@ export default function RideSummaryCard({ ride }) {
           <div className="mt-2 text-sm font-semibold text-white">${formatValue(ride.fare)}</div>
         </div>
       </div>
+
+      {typeof onTrack === 'function' ? (
+        <div className="pt-1">
+          <Button onClick={() => onTrack(ride)} className="w-full sm:w-auto">
+            Track ride
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }

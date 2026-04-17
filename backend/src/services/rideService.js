@@ -100,6 +100,26 @@ const calculateEstimatedFare = ({ pickupLatitude, pickupLongitude, dropLatitude,
   return Number(Math.max(computedFare, MINIMUM_FARE).toFixed(2));
 };
 
+const normalizeCoordinates = (payload = {}) => {
+  const pickupLatitude = normalizeNumber(payload.pickupLatitude);
+  const pickupLongitude = normalizeNumber(payload.pickupLongitude);
+  const dropLatitude = normalizeNumber(payload.dropLatitude);
+  const dropLongitude = normalizeNumber(payload.dropLongitude);
+
+  if ([pickupLatitude, pickupLongitude, dropLatitude, dropLongitude].some((value) => value === null)) {
+    const error = new Error('pickupLatitude, pickupLongitude, dropLatitude and dropLongitude are required numbers');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    pickupLatitude,
+    pickupLongitude,
+    dropLatitude,
+    dropLongitude,
+  };
+};
+
 const emitToSocketIds = (io, socketIds, eventName, payload) => {
   for (const socketId of socketIds) {
     io.to(socketId).emit(eventName, payload);
@@ -118,6 +138,12 @@ const emitRideEventToParticipants = (eventName, ride) => {
     driverId: resolveDriverId(ride),
     status: ride.status,
     fare: ride.fare,
+    pickupLatitude: ride.pickupLatitude,
+    pickupLongitude: ride.pickupLongitude,
+    dropLatitude: ride.dropLatitude,
+    dropLongitude: ride.dropLongitude,
+    pickupAddress: ride.pickupAddress || null,
+    dropAddress: ride.dropAddress || null,
     updatedAt: new Date().toISOString(),
   };
 
@@ -158,10 +184,7 @@ const emitRideRequestedToDrivers = (ride) => {
 };
 
 const requestRide = async (riderId, payload) => {
-  const pickupLatitude = normalizeNumber(payload.pickupLatitude);
-  const pickupLongitude = normalizeNumber(payload.pickupLongitude);
-  const dropLatitude = normalizeNumber(payload.dropLatitude);
-  const dropLongitude = normalizeNumber(payload.dropLongitude);
+  const { pickupLatitude, pickupLongitude, dropLatitude, dropLongitude } = normalizeCoordinates(payload);
 
   const hasExplicitFare =
     payload.fare !== undefined && payload.fare !== null && String(payload.fare).trim() !== "";
@@ -174,12 +197,6 @@ const requestRide = async (riderId, payload) => {
         dropLatitude,
         dropLongitude,
       });
-
-  if ([pickupLatitude, pickupLongitude, dropLatitude, dropLongitude].some((value) => value === null)) {
-    const error = new Error("pickupLatitude, pickupLongitude, dropLatitude and dropLongitude are required numbers");
-    error.statusCode = 400;
-    throw error;
-  }
 
   if (Number.isNaN(fare) || fare < 0) {
     const error = new Error("fare must be a valid non-negative number");
@@ -219,6 +236,17 @@ const requestRide = async (riderId, payload) => {
   });
 
   return sanitizeRide(ride);
+};
+
+const estimateFare = async (payload) => {
+  const { pickupLatitude, pickupLongitude, dropLatitude, dropLongitude } = normalizeCoordinates(payload);
+
+  return calculateEstimatedFare({
+    pickupLatitude,
+    pickupLongitude,
+    dropLatitude,
+    dropLongitude,
+  });
 };
 
 const acceptRide = async (driverId, rideId) => {
@@ -347,11 +375,64 @@ const endRide = async (driverId, rideId) => {
   return sanitizeRide(updatedRide);
 };
 
+const cancelRide = async (riderId, rideId) => {
+  const ride = await rideModel.findById(rideId);
+  if (!ride) {
+    const error = new Error("Ride not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (String(resolveRiderId(ride)) !== String(riderId)) {
+    const error = new Error("Only the rider can cancel this ride");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (!["REQUESTED", "ACCEPTED"].includes(ride.status)) {
+    const error = new Error("Only requested or accepted rides can be cancelled");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const updatedRide = await rideModel.update(ride.id, {
+    status: "CANCELLED",
+  });
+
+  logger.info("Ride cancelled", {
+    rideId: ride.id,
+    driverId: resolveDriverId(ride),
+    riderId,
+    status: "CANCELLED",
+  });
+
+  emitRideEventToParticipants("ride-cancelled", updatedRide);
+
+  return sanitizeRide(updatedRide);
+};
+
 const getRideById = async (rideId) => {
   const ride = await rideModel.findById(rideId);
   if (!ride) {
     const error = new Error("Ride not found");
     error.statusCode = 404;
+    throw error;
+  }
+
+  return sanitizeRide(ride);
+};
+
+const getRideByIdForDriver = async (driverId, rideId) => {
+  const ride = await rideModel.findById(rideId);
+  if (!ride) {
+    const error = new Error('Ride not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (String(resolveDriverId(ride) || '') !== String(driverId)) {
+    const error = new Error('This ride is not associated with the current driver');
+    error.statusCode = 403;
     throw error;
   }
 
@@ -378,14 +459,25 @@ const getActiveRideForDriver = async (driverId) => {
   return ride ? sanitizeRide(ride) : null;
 };
 
+const getCompletedRideHistoryForDriver = async (driverId) => {
+  const rides = await rideModel.findByDriverId(driverId);
+  return rides
+    .filter((ride) => ['COMPLETED', 'CANCELLED'].includes(String(ride.status || '').toUpperCase()))
+    .map((ride) => sanitizeRide(ride));
+};
+
 module.exports = {
   requestRide,
+  estimateFare,
   acceptRide,
   startRide,
   endRide,
+  cancelRide,
   getRideById,
+  getRideByIdForDriver,
   getActiveRideForRider,
   getRideHistoryForRider,
   getOpenRideRequestsForDriver,
   getActiveRideForDriver,
+  getCompletedRideHistoryForDriver,
 };

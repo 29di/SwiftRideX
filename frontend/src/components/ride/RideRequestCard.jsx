@@ -1,5 +1,6 @@
 import { LocateFixed, SendHorizontal } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { rideService } from '../../services/rideService';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
@@ -82,6 +83,10 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
   const [suggestionError, setSuggestionError] = useState({ pickup: '', drop: '' });
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [fareEstimateLoading, setFareEstimateLoading] = useState(false);
+  const [fareEstimateError, setFareEstimateError] = useState('');
+  const hasTriedAutoLocate = useRef(false);
+  const fareEstimateRequestId = useRef(0);
 
   const debouncedPickupAddress = useDebouncedValue(form.pickupAddress);
   const debouncedDropAddress = useDebouncedValue(form.dropAddress);
@@ -95,6 +100,8 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
       setSuggestionLoading({ pickup: false, drop: false });
       setSuggestionError({ pickup: '', drop: '' });
       setLocationError('');
+      setFareEstimateError('');
+      setFareEstimateLoading(false);
       return;
     }
 
@@ -229,9 +236,11 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
     });
   };
 
-  const useCurrentLocation = () => {
+  const useCurrentLocation = ({ force = true, silent = false } = {}) => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported in this browser.');
+      if (!silent) {
+        setLocationError('Geolocation is not supported in this browser.');
+      }
       return;
     }
 
@@ -245,30 +254,99 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
           const address = await reverseGeocode(latitude, longitude);
 
           setForm((current) => ({
-            ...current,
-            pickupAddress: address,
-            pickupLat: Number(latitude),
-            pickupLng: Number(longitude),
+            ...(force || !String(current.pickupAddress || '').trim()
+              ? {
+                  ...current,
+                  pickupAddress: address,
+                  pickupLat: Number(latitude),
+                  pickupLng: Number(longitude),
+                }
+              : current),
           }));
 
           setPickupSuggestions([]);
           setActiveSuggestionIndex((current) => ({ ...current, pickup: -1 }));
         } catch (error) {
-          setLocationError(error.message || 'Unable to resolve your current address.');
+          if (!silent) {
+            setLocationError(error.message || 'Unable to resolve your current address.');
+          }
         } finally {
           setLocationLoading(false);
         }
       },
       (error) => {
-        if (error.code === 1) {
-          setLocationError('Location permission denied. Please allow location access.');
-        } else {
-          setLocationError('Unable to read your current location.');
+        if (!silent) {
+          if (error.code === 1) {
+            setLocationError('Location permission denied. Please allow location access.');
+          } else {
+            setLocationError('Unable to read your current location.');
+          }
         }
         setLocationLoading(false);
       }
     );
   };
+
+  useEffect(() => {
+    if (disabled || hasTriedAutoLocate.current) {
+      return;
+    }
+
+    hasTriedAutoLocate.current = true;
+    useCurrentLocation({ force: false, silent: true });
+  }, [disabled]);
+
+  useEffect(() => {
+    const hasRouteCoordinates =
+      form.pickupLat !== null && form.pickupLng !== null && form.dropLat !== null && form.dropLng !== null;
+
+    if (!hasRouteCoordinates) {
+      setFareEstimateLoading(false);
+      setFareEstimateError('');
+      setForm((current) => (current.fare === '' ? current : { ...current, fare: '' }));
+      return;
+    }
+
+    const requestId = fareEstimateRequestId.current + 1;
+    fareEstimateRequestId.current = requestId;
+    setFareEstimateLoading(true);
+    setFareEstimateError('');
+
+    rideService
+      .estimateFare({
+        pickupLatitude: form.pickupLat,
+        pickupLongitude: form.pickupLng,
+        dropLatitude: form.dropLat,
+        dropLongitude: form.dropLng,
+      })
+      .then((response) => {
+        if (fareEstimateRequestId.current !== requestId) {
+          return;
+        }
+
+        const normalizedFare = Number(response?.fare);
+        if (!Number.isFinite(normalizedFare) || normalizedFare < 0) {
+          throw new Error('Invalid fare estimate received from server');
+        }
+
+        setForm((current) => ({
+          ...current,
+          fare: normalizedFare.toFixed(2),
+        }));
+      })
+      .catch((error) => {
+        if (fareEstimateRequestId.current !== requestId) {
+          return;
+        }
+        setFareEstimateError(error?.message || 'Unable to estimate fare right now.');
+        setForm((current) => ({ ...current, fare: '' }));
+      })
+      .finally(() => {
+        if (fareEstimateRequestId.current === requestId) {
+          setFareEstimateLoading(false);
+        }
+      });
+  }, [form.pickupLat, form.pickupLng, form.dropLat, form.dropLng]);
 
   useEffect(() => {
     const query = debouncedPickupAddress.trim();
@@ -382,7 +460,12 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
             Search addresses to create a live ride request with a production-style location flow.
           </p>
         </div>
-        <Button variant="secondary" onClick={useCurrentLocation} className="shrink-0" disabled={locationLoading || disabled}>
+        <Button
+          variant="secondary"
+          onClick={() => useCurrentLocation({ force: true, silent: false })}
+          className="shrink-0"
+          disabled={locationLoading || disabled}
+        >
           <LocateFixed className="h-4 w-4" />
           {locationLoading ? 'Locating...' : 'Use my location'}
         </Button>
@@ -422,14 +505,21 @@ export default function RideRequestCard({ onSubmit, loading = false, initialValu
         </div>
 
         <Input
-          label="Estimated fare"
+          label="Estimated fare (auto-calculated)"
           value={form.fare}
-          onChange={updateField('fare')}
-          placeholder="18.50"
-          helperText="Optional. Leave empty if you want backend pricing defaults."
+          placeholder={fareEstimateLoading ? 'Calculating...' : 'Fare appears after both locations are selected'}
+          helperText={
+            fareEstimateLoading
+              ? 'Calculating fare from backend engine...'
+              : form.fare
+                ? `Estimated fare: INR ${form.fare}`
+                : 'Select both pickup and drop locations to estimate fare.'
+          }
+          readOnly
           disabled={disabled}
         />
 
+        {fareEstimateError ? <p className="text-sm text-rose-300">{fareEstimateError}</p> : null}
         {locationError ? <p className="text-sm text-rose-300">{locationError}</p> : null}
 
         <Button type="submit" disabled={loading || disabled} className="w-full sm:w-auto">

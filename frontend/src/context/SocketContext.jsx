@@ -89,6 +89,14 @@ export function SocketProvider({ children }) {
       pushEvent('ride-status-updated', payload);
     });
 
+    nextSocket.on('ride-chat-message', (payload) => {
+      pushEvent('ride-chat-message', payload);
+    });
+
+    nextSocket.on('ride-chat-ack', (payload) => {
+      pushEvent('ride-chat-ack', payload);
+    });
+
     return () => {
       nextSocket.removeAllListeners();
       nextSocket.disconnect();

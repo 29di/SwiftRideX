@@ -12,6 +12,15 @@ const requestRide = async (req, res, next) => {
   }
 };
 
+const estimateFare = async (req, res, next) => {
+  try {
+    const fare = await rideService.estimateFare(req.body);
+    res.status(200).json({ fare });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const acceptRide = async (req, res, next) => {
   try {
     const ride = await rideService.acceptRide(req.user.id, req.params.rideId);
@@ -41,6 +50,18 @@ const endRide = async (req, res, next) => {
     const ride = await rideService.endRide(req.user.id, req.params.rideId);
     res.status(200).json({
       message: "Ride completed successfully",
+      ride,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const cancelRide = async (req, res, next) => {
+  try {
+    const ride = await rideService.cancelRide(req.user.id, req.params.rideId);
+    res.status(200).json({
+      message: "Ride cancelled successfully",
       ride,
     });
   } catch (error) {
@@ -95,9 +116,11 @@ const getActiveRideForDriver = async (req, res, next) => {
 
 module.exports = {
   requestRide,
+  estimateFare,
   acceptRide,
   startRide,
   endRide,
+  cancelRide,
   getRide,
   getRides,
   getRideHistory,

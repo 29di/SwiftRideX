@@ -3,6 +3,7 @@ const STATUS_CLASS_MAP = {
   ACCEPTED: 'status-accepted',
   STARTED: 'status-started',
   COMPLETED: 'status-completed',
+  CANCELLED: 'status-cancelled',
 };
 
 export default function StatusBadge({ status }) {

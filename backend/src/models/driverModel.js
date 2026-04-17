@@ -90,6 +90,23 @@ const updateLocation = async (id, latitude, longitude) => {
   );
 };
 
+const updateName = async (id, name) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const normalizedName = String(name || '').trim();
+  if (!normalizedName) {
+    return null;
+  }
+
+  return Driver.findByIdAndUpdate(
+    id,
+    { name: normalizedName },
+    { new: true, runValidators: true }
+  );
+};
+
 module.exports = {
   create,
   findByEmail,
@@ -97,5 +114,6 @@ module.exports = {
   findAll,
   updateStatus,
   updateLocation,
+  updateName,
   Driver,
 };

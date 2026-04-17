@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocketRealtime } from '../../hooks/useSocketRealtime';
+import RideChatWidget from '../chat/RideChatWidget';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Navbar from './Navbar';
@@ -87,9 +88,6 @@ export default function AppShell({ children }) {
 
               <div className="grid gap-3">
                 <Button variant="secondary" onClick={() => navigateFromPanel('/rider')}>Overview</Button>
-                <Button variant="primary" onClick={() => navigateFromPanel('/rider/book')} disabled={hasActiveRide}>
-                  {hasActiveRide ? 'Complete current ride first' : 'Book a new ride'}
-                </Button>
                 <Button variant="secondary" onClick={() => navigateFromPanel('/rider/tracking')} disabled={!hasActiveRide}>Track current ride</Button>
                 <Button variant="secondary" onClick={() => navigateFromPanel('/rider/history')}>My rides history</Button>
               </div>
@@ -99,6 +97,7 @@ export default function AppShell({ children }) {
       ) : null}
 
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+      <RideChatWidget />
     </div>
   );
 }

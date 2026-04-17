@@ -91,6 +91,10 @@
     @apply border-emerald-400/40 bg-emerald-500/15 text-emerald-300;
   }
 
+    .status-cancelled {
+      @apply border-red-400/40 bg-red-500/15 text-red-300;
+    }
+
   .ambient-orb {
     @apply pointer-events-none absolute rounded-full blur-3xl;
   }

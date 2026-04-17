@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CarFront, UserRound, Wifi } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
-import Button from '../components/ui/Button';
+import RideRequestCard from '../components/ride/RideRequestCard';
 import RideSummaryCard from '../components/ride/RideSummaryCard';
 import RideTimeline from '../components/ride/RideTimeline';
-import RideActivityFeed from '../components/ride/RideActivityFeed';
 import StatusBadge from '../components/ride/StatusBadge';
 import { useAuth } from '../context/AuthContext';
 import { useSocketRealtime } from '../hooks/useSocketRealtime';
+import { getApiErrorMessage } from '../services/api';
 import { rideService } from '../services/rideService';
 
 const ACTIVE_RIDE_KEY = 'swiftridex_active_ride';
@@ -35,11 +36,12 @@ const saveRide = (ride) => {
 export default function RiderDashboardPage() {
   const navigate = useNavigate();
   const { session, refreshSession } = useAuth();
-  const { latestRideEvent, events, connectionStatus } = useSocketRealtime();
+  const { latestRideEvent, connectionStatus } = useSocketRealtime();
   const [rides, setRides] = useState(() => {
     const storedRide = readRide();
     return storedRide ? [storedRide] : [];
   });
+  const [requestingRide, setRequestingRide] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
   const [actionError, setActionError] = useState('');
   const hasLoadedRef = useRef(false);
@@ -112,13 +114,58 @@ export default function RiderDashboardPage() {
   const primaryRide = activeRide || null;
   const primaryDriverName = primaryRide?.driver?.name || (primaryRide?.driverId ? 'Assigned driver' : 'Pending');
 
+  const handleRequestRide = async (payload) => {
+    setActionError('');
+    setRequestingRide(true);
+
+    try {
+      const response = await rideService.requestRide(payload);
+      const nextRide = {
+        ...response.ride,
+        pickupAddress: payload.pickupAddress,
+        dropAddress: payload.dropAddress,
+      };
+
+      setRides((current) => {
+        const filtered = current.filter((ride) => String(ride.id) !== String(nextRide.id));
+        return [nextRide, ...filtered];
+      });
+      saveRide(nextRide);
+    } catch (error) {
+      setActionError(getApiErrorMessage(error));
+    } finally {
+      setRequestingRide(false);
+    }
+  };
+
   const metrics = useMemo(
     () => [
-      { label: 'Connection', value: connectionStatus === 'connected' ? 'Live' : 'Syncing' },
-      { label: 'Assigned driver', value: primaryDriverName },
-      { label: 'Ride status', value: primaryRide?.status || 'Idle' },
+      {
+        label: 'Connection',
+        value: connectionStatus === 'connected' ? 'Live' : 'Syncing',
+        Icon: Wifi,
+        iconClassName: connectionStatus === 'connected'
+          ? 'text-emerald-300 bg-emerald-500/15 ring-emerald-300/30'
+          : 'text-amber-300 bg-amber-500/15 ring-amber-300/30',
+      },
+      {
+        label: 'Assigned driver',
+        value: primaryDriverName,
+        Icon: UserRound,
+        iconClassName: primaryRide?.driverId
+          ? 'text-cyan-300 bg-cyan-500/15 ring-cyan-300/30'
+          : 'text-slate-300 bg-slate-500/15 ring-slate-300/25',
+      },
+      {
+        label: 'Ride status',
+        value: primaryRide?.status || 'Idle',
+        Icon: CarFront,
+        iconClassName: primaryRide?.id
+          ? 'text-brand-300 bg-brand-500/15 ring-brand-300/30'
+          : 'text-slate-300 bg-slate-500/15 ring-slate-300/25',
+      },
     ],
-    [connectionStatus, primaryDriverName, primaryRide?.status]
+    [connectionStatus, primaryDriverName, primaryRide?.driverId, primaryRide?.id, primaryRide?.status]
   );
 
   if (loadingPage) {
@@ -143,7 +190,9 @@ export default function RiderDashboardPage() {
                 <div className="text-xs uppercase tracking-[0.24em] text-slate-400">{metric.label}</div>
                 <div className="mt-2 text-2xl font-bold text-white">{metric.value}</div>
               </div>
-              <div className="h-14 w-14 rounded-3xl bg-brand-500/10 ring-1 ring-brand-400/20" />
+              <div className={`flex h-14 w-14 items-center justify-center rounded-3xl ring-1 ${metric.iconClassName}`}>
+                <metric.Icon className="h-6 w-6" />
+              </div>
             </Card>
           ))}
         </div>
@@ -160,7 +209,7 @@ export default function RiderDashboardPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-              <RideSummaryCard ride={activeRide} />
+              <RideSummaryCard ride={activeRide} onTrack={() => navigate('/rider/tracking')} />
               <Card>
                 <div className="section-label">Ride progression</div>
                 <h3 className="mt-2 text-2xl font-bold text-white">Live status tracking</h3>
@@ -172,28 +221,13 @@ export default function RiderDashboardPage() {
             </div>
           </Card>
         ) : (
-          <Card className="space-y-4">
-            <div className="section-label">No active ride</div>
-            <h3 className="text-2xl font-bold text-white">Ready for your next trip</h3>
-            <p className="text-sm text-slate-400">You have no ongoing ride right now. Open Book Ride from the side panel to start a new request.</p>
-            <div>
-              <Button variant="primary" onClick={() => navigate('/rider/book')}>Go to Book Ride</Button>
-            </div>
-          </Card>
+          <RideRequestCard onSubmit={handleRequestRide} loading={requestingRide} disabled={false} />
         )}
 
         {actionError ? (
           <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{actionError}</div>
         ) : null}
 
-        <Card>
-          <div className="section-label">Realtime feed</div>
-          <h3 className="mt-2 text-2xl font-bold text-white">Event stream</h3>
-          <p className="mt-2 text-sm text-slate-400">Recent socket events from the backend appear below.</p>
-          <div className="mt-5">
-            <RideActivityFeed events={events} />
-          </div>
-        </Card>
       </div>
     </div>
   );

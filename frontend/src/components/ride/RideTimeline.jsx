@@ -1,13 +1,15 @@
-const STEP_ORDER = ['REQUESTED', 'ACCEPTED', 'STARTED', 'COMPLETED'];
+const STEP_ORDER = ['REQUESTED', 'ACCEPTED', 'STARTED', 'COMPLETED', 'CANCELLED'];
 
 export default function RideTimeline({ status = 'REQUESTED' }) {
-  const currentIndex = STEP_ORDER.indexOf(String(status).toUpperCase());
+  const normalizedStatus = String(status).toUpperCase();
+  const currentIndex = STEP_ORDER.indexOf(normalizedStatus);
+  const isCancelled = normalizedStatus === 'CANCELLED';
 
   return (
     <div className="grid gap-3">
       {STEP_ORDER.map((step, index) => {
-        const active = index <= currentIndex;
-        const done = index < currentIndex;
+        const active = isCancelled ? step === 'CANCELLED' : index <= currentIndex;
+        const done = isCancelled ? false : index < currentIndex;
 
         return (
           <div key={step} className="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
@@ -29,6 +31,7 @@ export default function RideTimeline({ status = 'REQUESTED' }) {
                 {step === 'ACCEPTED' && 'Driver has been assigned and accepted the trip.'}
                 {step === 'STARTED' && 'Trip is in progress.'}
                 {step === 'COMPLETED' && 'Trip has finished successfully.'}
+                {step === 'CANCELLED' && 'Trip was cancelled by rider or system.'}
               </div>
             </div>
           </div>

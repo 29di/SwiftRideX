@@ -229,10 +229,34 @@ const updateLocation = async (driverId, latitude, longitude) => {
   return sanitizeDriver(driver);
 };
 
+const updateName = async (driverId, name) => {
+  const normalizedName = String(name || '').trim();
+  if (!normalizedName) {
+    const error = new Error('name is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const driver = await driverModel.updateName(driverId, normalizedName);
+  if (!driver) {
+    const error = new Error('Driver not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  logger.info('Driver name updated', {
+    driverId,
+    name: normalizedName,
+  });
+
+  return sanitizeDriver(driver);
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   setOnlineStatus,
   updateLocation,
+  updateName,
 };

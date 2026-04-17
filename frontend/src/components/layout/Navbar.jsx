@@ -1,11 +1,9 @@
-import { CarFront, History, LayoutDashboard, LogOut, MapPinned, Route, Users, Wifi } from 'lucide-react';
+import { CarFront, History, LayoutDashboard, LogOut, Route, Users, Wifi } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import Button from '../ui/Button';
 
 const riderLinks = [
   { to: '/rider', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/rider/book', label: 'Book Ride', icon: CarFront },
-  { to: '/rider/tracking', label: 'Tracking', icon: MapPinned },
   { to: '/rider/history', label: 'History', icon: History },
 ];
 
@@ -16,6 +14,7 @@ const driverLinks = [
 
 export default function Navbar({ role, userName, connectionStatus, onLogout, onUserNameClick }) {
   const links = role === 'driver' ? driverLinks : riderLinks;
+  const roleLabel = role === 'driver' ? 'Driver' : role === 'rider' ? 'Rider' : 'Guest';
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/5 bg-midnight/80 backdrop-blur-xl">
@@ -26,7 +25,7 @@ export default function Navbar({ role, userName, connectionStatus, onLogout, onU
           </div>
           <div>
             <div className="text-lg font-bold text-white">SwiftrideX</div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Premium mobility</div>
+            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">SwiftrideX {roleLabel}</div>
           </div>
         </NavLink>
 
@@ -71,7 +70,6 @@ export default function Navbar({ role, userName, connectionStatus, onLogout, onU
             >
               <Wifi className="h-4 w-4" />
             </div>
-            <span className="status-pill status-accepted">{role || 'guest'}</span>
             <Button variant="secondary" onClick={onLogout} className="inline-flex">
               <LogOut className="h-4 w-4" />
               Logout

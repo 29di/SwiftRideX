@@ -101,7 +101,7 @@ const rideSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["REQUESTED", "ACCEPTED", "STARTED", "COMPLETED"],
+      enum: ["REQUESTED", "ACCEPTED", "STARTED", "COMPLETED", "CANCELLED"],
       default: "REQUESTED",
       index: true,
     },
@@ -203,6 +203,17 @@ const findByRiderId = async (riderId) => {
   }).sort({ createdAt: -1 });
 };
 
+const findByDriverId = async (driverId) => {
+  const normalizedDriverId = String(driverId || '').trim();
+  if (!normalizedDriverId) {
+    return [];
+  }
+
+  return Ride.find({
+    $or: [{ 'driver.id': normalizedDriverId }, { driverId: normalizedDriverId }],
+  }).sort({ createdAt: -1 });
+};
+
 module.exports = {
   create,
   findById,
@@ -211,5 +222,6 @@ module.exports = {
   findActiveByRiderId,
   findOpenRequests,
   findByRiderId,
+  findByDriverId,
   Ride,
 };

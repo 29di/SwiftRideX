@@ -3,8 +3,8 @@ import AppShell from './components/layout/AppShell';
 import { useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import DriverDashboardPage from './pages/DriverDashboardPage';
+import DriverRideDetailPage from './pages/DriverRideDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
-import RideBookingPage from './pages/RideBookingPage';
 import RideHistoryPage from './pages/RideHistoryPage';
 import RiderDashboardPage from './pages/RiderDashboardPage';
 import RideTrackingPage from './pages/RideTrackingPage';
@@ -45,16 +45,6 @@ export default function App() {
         }
       />
       <Route
-        path="/rider/book"
-        element={
-          <ProtectedRoute>
-            <AppShell>
-              <RideBookingPage />
-            </AppShell>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/rider/history"
         element={
           <ProtectedRoute>
@@ -80,6 +70,16 @@ export default function App() {
           <ProtectedRoute>
             <AppShell>
               <DriverDashboardPage />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/driver/rides/:rideId"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <DriverRideDetailPage />
             </AppShell>
           </ProtectedRoute>
         }
