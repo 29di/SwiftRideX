@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-midnight text-textsoft font-body antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.28), transparent 25%),
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 22%),
+      linear-gradient(180deg, #0f172a 0%, #111c34 100%);
+  }
+
+  * {
+    @apply border-slate-700/50;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    background: rgba(37, 99, 235, 0.35);
+    color: #f8fafc;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply border border-white/10 bg-white/5 backdrop-blur-xl shadow-panel;
+  }
+
+  .card-shell {
+    @apply glass-panel rounded-3xl p-6 md:p-7;
+  }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-[0.28em] text-brand-300;
+  }
+
+  .field-label {
+    @apply mb-2 block text-sm font-medium text-slate-200;
+  }
+
+  .field-input {
+    @apply w-full rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-sm text-textsoft outline-none transition duration-200 placeholder:text-slate-500 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20;
+  }
+
+  .soft-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .soft-button-primary {
+    @apply soft-button bg-brand-600 text-white shadow-lg shadow-brand-600/25 hover:bg-brand-500 hover:shadow-brand-500/30;
+  }
+
+  .soft-button-secondary {
+    @apply soft-button border border-white/10 bg-white/5 text-slate-100 hover:border-white/20 hover:bg-white/10;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em];
+  }
+
+  .status-requested {
+    @apply border-slate-600/60 bg-slate-900/70 text-slate-200;
+  }
+
+  .status-accepted {
+    @apply border-brand-400/40 bg-brand-500/15 text-brand-300;
+  }
+
+  .status-started {
+    @apply border-amber-400/40 bg-amber-500/15 text-amber-300;
+  }
+
+  .status-completed {
+    @apply border-emerald-400/40 bg-emerald-500/15 text-emerald-300;
+  }
+
+  .ambient-orb {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+  }
+}
