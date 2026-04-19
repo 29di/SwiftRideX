@@ -4,6 +4,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
 import StatusBadge from '../components/ride/StatusBadge';
+import { formatRideId } from '../services/rideId';
 import { rideService } from '../services/rideService';
 
 export default function RideHistoryPage() {
@@ -60,7 +61,7 @@ export default function RideHistoryPage() {
             <Card key={ride.id} className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-white">Ride #{ride.id}</div>
+                  <div className="text-sm font-semibold text-white">Ride #{formatRideId(ride.id)}</div>
                   <div className="mt-1 text-xs text-slate-400">
                     {ride.pickupAddress || 'Pickup address unavailable'}
                     {' '}

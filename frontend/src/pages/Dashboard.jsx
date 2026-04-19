@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { createRiderSocket } from '../socket/socket';
+import { formatRideId } from '../services/rideId';
 import { rideService } from '../services/rideService';
 
 const STATUS_STYLES = {
@@ -683,7 +684,7 @@ export default function Dashboard() {
       rideStatusRef.current = String(ride?.status || 'REQUESTED').toUpperCase();
       setDriverId(ride?.driverId ? String(ride.driverId) : '');
       driverIdRef.current = ride?.driverId ? String(ride.driverId) : '';
-      setRequestMessage(`Ride requested successfully. Ride ID: ${nextRideId}`);
+      setRequestMessage(`Ride requested successfully. Ride ID: ${formatRideId(nextRideId)}`);
     } catch (error) {
       setErrorMessage(error?.message || 'Failed to request ride.');
     } finally {

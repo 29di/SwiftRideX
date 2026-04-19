@@ -117,8 +117,8 @@ export default function AuthPage() {
         text: 'continue_with',
         shape: 'pill',
         size: 'large',
-        width: 300,
-        theme: 'outline',
+        width: 320,
+        theme: 'filled_black',
       });
     };
 
@@ -280,9 +280,9 @@ export default function AuthPage() {
                   </span>
                 </div>
 
-                <div className="flex justify-center">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                   {googleClientId ? (
-                    <div ref={googleButtonRef} className={`transition ${googleLoading ? 'opacity-60' : ''}`} />
+                    <div ref={googleButtonRef} className={`flex justify-center transition ${googleLoading ? 'opacity-60' : ''}`} />
                   ) : (
                     <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400">
                       Set VITE_GOOGLE_CLIENT_ID to enable Google login

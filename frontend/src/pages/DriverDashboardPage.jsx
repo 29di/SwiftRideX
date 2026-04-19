@@ -11,6 +11,7 @@ import RideSummaryCard from '../components/ride/RideSummaryCard';
 import { useAuth } from '../context/AuthContext';
 import { useSocketRealtime } from '../hooks/useSocketRealtime';
 import { getApiErrorMessage } from '../services/api';
+import { formatRideId } from '../services/rideId';
 import { driverService } from '../services/driverService';
 import { rideService } from '../services/rideService';
 
@@ -307,7 +308,7 @@ export default function DriverDashboardPage() {
       })
         .addTo(map)
         .bindPopup(
-          `<strong>Ride #${ride.id}</strong><br/>${formatRequestLocation(ride)}<br/>${formatDropLocation(ride)}<br/>Fare: $${ride.fare}`
+          `<strong>Ride #${formatRideId(ride.id)}</strong><br/>${formatRequestLocation(ride)}<br/>${formatDropLocation(ride)}<br/>Fare: $${ride.fare}`
         );
 
       marker.on('click', () => {
@@ -427,7 +428,7 @@ export default function DriverDashboardPage() {
       },
       {
         label: 'Active ride',
-        value: currentRide?.id ? `#${currentRide.id}` : 'None',
+        value: currentRide?.id ? `#${formatRideId(currentRide.id)}` : 'None',
         Icon: CarFront,
         iconClassName: currentRide?.id
           ? 'text-brand-300 bg-brand-500/15 ring-brand-300/30'
@@ -701,7 +702,7 @@ export default function DriverDashboardPage() {
                 className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-brand-400/30 hover:bg-brand-500/10"
                 onClick={() => navigate(`/driver/rides/${currentRide.id}`)}
               >
-                <div className="text-sm font-semibold text-white">Ride #{currentRide.id}</div>
+                <div className="text-sm font-semibold text-white">Ride #{formatRideId(currentRide.id)}</div>
                 <div className="mt-2 text-xs text-slate-300">Status: {String(currentRide.status || '').toUpperCase()}</div>
                 <div className="mt-1 text-xs text-slate-400">Open detailed ride page</div>
               </button>
@@ -763,7 +764,7 @@ export default function DriverDashboardPage() {
                       <div key={ride.id} className="rounded-2xl border border-white/5 bg-white/5 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="text-sm font-semibold text-white">Ride #{ride.id}</div>
+                            <div className="text-sm font-semibold text-white">Ride #{formatRideId(ride.id)}</div>
                             <div className="mt-1 text-xs text-slate-400">{formatRequestLocation(ride)}</div>
                           </div>
                           <div className="text-sm font-semibold text-cyan-300">${ride.fare}</div>
@@ -819,7 +820,7 @@ export default function DriverDashboardPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-white">Ride #{ride.id}</div>
+                    <div className="text-sm font-semibold text-white">Ride #{formatRideId(ride.id)}</div>
                     <div className="mt-1 text-xs text-slate-400">{ride.pickupAddress || 'Pickup unavailable'} → {ride.dropAddress || 'Drop unavailable'}</div>
                   </div>
                   <div className="text-xs font-semibold text-slate-300">{String(ride.status || '').toUpperCase()}</div>

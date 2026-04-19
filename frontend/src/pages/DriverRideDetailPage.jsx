@@ -6,6 +6,7 @@ import Skeleton from '../components/ui/Skeleton';
 import RideSummaryCard from '../components/ride/RideSummaryCard';
 import RideTimeline from '../components/ride/RideTimeline';
 import { useSocketRealtime } from '../hooks/useSocketRealtime';
+import { formatRideId } from '../services/rideId';
 import { driverService } from '../services/driverService';
 
 export default function DriverRideDetailPage() {
@@ -63,7 +64,7 @@ export default function DriverRideDetailPage() {
       <div className="grid gap-6">
         <Card>
           <div className="section-label">Ride detail</div>
-          <h3 className="mt-2 text-2xl font-bold text-white">Ride #{ride.id}</h3>
+          <h3 className="mt-2 text-2xl font-bold text-white">Ride #{formatRideId(ride.id)}</h3>
           <p className="mt-2 text-sm text-slate-400">Route map has been moved to the driver dashboard active ride panel.</p>
         </Card>
         <RideSummaryCard ride={ride} />

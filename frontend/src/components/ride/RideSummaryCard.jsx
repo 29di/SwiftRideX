@@ -1,5 +1,6 @@
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { formatRideId } from '../../services/rideId';
 import StatusBadge from './StatusBadge';
 
 const formatValue = (value) => (value === null || value === undefined || value === '' ? '—' : value);
@@ -24,7 +25,7 @@ export default function RideSummaryCard({ ride, onTrack }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="section-label">Current ride</div>
-          <h3 className="mt-2 text-2xl font-bold text-white">Ride #{formatValue(ride.id)}</h3>
+          <h3 className="mt-2 text-2xl font-bold text-white">Ride #{formatRideId(ride.id)}</h3>
         </div>
         <StatusBadge status={ride.status} />
       </div>

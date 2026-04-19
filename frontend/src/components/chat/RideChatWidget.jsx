@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocketRealtime } from '../../hooks/useSocketRealtime';
 import { chatService } from '../../services/chatService';
+import { formatRideId } from '../../services/rideId';
 import { rideService } from '../../services/rideService';
 import Button from '../ui/Button';
 
@@ -283,7 +284,7 @@ export default function RideChatWidget() {
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
               <div className="text-xs uppercase tracking-[0.24em] text-slate-400">Ride chat</div>
-              <div className="mt-1 text-sm font-semibold text-white">Ride #{rideId}</div>
+              <div className="mt-1 text-sm font-semibold text-white">Ride #{formatRideId(rideId)}</div>
             </div>
             <button
               type="button"

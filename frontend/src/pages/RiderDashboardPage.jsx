@@ -10,6 +10,7 @@ import StatusBadge from '../components/ride/StatusBadge';
 import { useAuth } from '../context/AuthContext';
 import { useSocketRealtime } from '../hooks/useSocketRealtime';
 import { getApiErrorMessage } from '../services/api';
+import { formatRideId } from '../services/rideId';
 import { rideService } from '../services/rideService';
 
 const ACTIVE_RIDE_KEY = 'swiftridex_active_ride';
@@ -202,7 +203,7 @@ export default function RiderDashboardPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="section-label">Active ride</div>
-                <h3 className="mt-2 text-2xl font-bold text-white">Ride #{activeRide.id}</h3>
+                <h3 className="mt-2 text-2xl font-bold text-white">Ride #{formatRideId(activeRide.id)}</h3>
                 <p className="mt-2 text-sm text-slate-400">Your ongoing ride is visible here.</p>
               </div>
               <StatusBadge status={activeRide.status} />
@@ -213,7 +214,6 @@ export default function RiderDashboardPage() {
               <Card>
                 <div className="section-label">Ride progression</div>
                 <h3 className="mt-2 text-2xl font-bold text-white">Live status tracking</h3>
-                <p className="mt-2 text-sm text-slate-400">Socket.io updates flow here instantly without page refresh.</p>
                 <div className="mt-5">
                   <RideTimeline status={activeRide.status || 'REQUESTED'} />
                 </div>

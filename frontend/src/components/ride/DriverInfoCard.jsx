@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Edit3, MapPin, Power, PowerOff, RefreshCw } from 'lucide-react';
+import { formatRideId } from '../../services/rideId';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
@@ -139,7 +140,7 @@ export default function DriverInfoCard({
         </div>
         <p className="mt-3 text-sm text-slate-300">
           {currentRide
-            ? `Ride #${formatValue(currentRide.id)} is currently ${String(currentRide.status).toLowerCase()}.`
+            ? `Ride #${formatRideId(currentRide.id)} is currently ${String(currentRide.status).toLowerCase()}.`
             : 'No active assignment right now. Incoming updates will appear instantly when the backend emits them.'}
         </p>
       </div>
