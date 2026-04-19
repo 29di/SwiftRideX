@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 const resolveApiUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = String(import.meta.env.VITE_API_URL || '').trim();
 
   if (apiUrl) {
-    return apiUrl;
+    const normalized = apiUrl.replace(/\/+$/, '');
+    return normalized.endsWith('/api') ? normalized : `${normalized}/api`;
   }
 
   return 'http://localhost:5000/api';
