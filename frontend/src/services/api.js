@@ -13,7 +13,7 @@ const resolveApiUrl = () => {
 
 const api = axios.create({
   baseURL: resolveApiUrl(),
-  timeout: 15000,
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -42,6 +42,23 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error?.config;
+    const method = String(config?.method || '').toLowerCase();
+    const isGetRequest = method === 'get';
+    const isTimeout = error?.code === 'ECONNABORTED' || String(error?.message || '').toLowerCase().includes('timeout');
+
+    if (config && isGetRequest && isTimeout && !config.__retriedAfterTimeout) {
+      config.__retriedAfterTimeout = true;
+      return api.request(config);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export const getApiErrorMessage = (error) => {
   if (error?.code === 'ERR_NETWORK' || (!error?.response && error?.request)) {

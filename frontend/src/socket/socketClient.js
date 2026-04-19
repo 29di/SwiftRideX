@@ -15,7 +15,15 @@ const resolveSocketUrl = () => {
 export const createSocketClient = ({ token }) =>
   io(resolveSocketUrl(), {
     autoConnect: true,
-    transports: ['websocket'],
+    // Start with polling so Render cold-start/proxy edge cases can recover,
+    // then upgrade to websocket automatically when available.
+    transports: ['polling', 'websocket'],
+    upgrade: true,
+    timeout: 30000,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 8000,
     auth: {
       token,
     },
