@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Edit3, MapPin, Power, PowerOff, RefreshCw } from 'lucide-react';
+import { reverseGeocode } from '../../services/geocodingService';
 import { formatRideId } from '../../services/rideId';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -35,23 +36,15 @@ export default function DriverInfoCard({
 
     const abortController = new AbortController();
 
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {
-      signal: abortController.signal,
-      headers: {
-        Accept: 'application/json',
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Failed to resolve location');
+    reverseGeocode(latitude, longitude)
+      .then((label) => {
+        if (abortController.signal.aborted) {
+          return;
         }
-        return response.json();
-      })
-      .then((data) => {
-        setLocationLabel(data?.display_name || 'Location available');
+        setLocationLabel(label || 'Location available');
       })
       .catch((error) => {
-        if (error?.name === 'AbortError') {
+        if (abortController.signal.aborted || error?.name === 'AbortError') {
           return;
         }
         setLocationLabel('Location available');

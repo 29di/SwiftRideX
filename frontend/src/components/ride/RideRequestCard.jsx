@@ -1,5 +1,6 @@
 import { LocateFixed, SendHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { reverseGeocode, searchLocations as searchPlaces } from '../../services/geocodingService';
 import { rideService } from '../../services/rideService';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -24,54 +25,6 @@ const useDebouncedValue = (value, delay = 350) => {
   }, [delay, value]);
 
   return debounced;
-};
-
-const searchPlaces = async (query, signal) => {
-  const trimmed = String(query || '').trim();
-  if (!trimmed) {
-    return [];
-  }
-
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=${encodeURIComponent(trimmed)}`,
-    {
-      signal,
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Location search failed');
-  }
-
-  const data = await response.json();
-  return Array.isArray(data)
-    ? data.map((item) => ({
-        address: item.display_name,
-        lat: Number(item.lat),
-        lng: Number(item.lon),
-      }))
-    : [];
-};
-
-const reverseGeocode = async (latitude, longitude) => {
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-    {
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to resolve your location address');
-  }
-
-  const data = await response.json();
-  return data?.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 };
 
 export default function RideRequestCard({ onSubmit, loading = false, initialValues, disabled = false }) {

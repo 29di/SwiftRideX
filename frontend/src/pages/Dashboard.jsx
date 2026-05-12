@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { geocodeLocation, reverseGeocode, searchLocations } from '../services/geocodingService';
 import { createRiderSocket } from '../socket/socket';
 import { formatRideId } from '../services/rideId';
 import { rideService } from '../services/rideService';
@@ -61,91 +62,6 @@ const useDebouncedValue = (value, delay = 350) => {
   }, [delay, value]);
 
   return debouncedValue;
-};
-
-const geocodeLocation = async (query) => {
-  const trimmedQuery = String(query || '').trim();
-
-  if (!trimmedQuery) {
-    throw new Error('Enter a location first');
-  }
-
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(trimmedQuery)}`,
-    {
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Location lookup failed');
-  }
-
-  const data = await response.json();
-  const match = data?.[0];
-
-  if (!match) {
-    throw new Error(`Could not find coordinates for "${trimmedQuery}"`);
-  }
-
-  return {
-    address: match.display_name || trimmedQuery,
-    lat: Number(match.lat),
-    lng: Number(match.lon),
-  };
-};
-
-const searchLocations = async (query, signal) => {
-  const trimmedQuery = String(query || '').trim();
-
-  if (!trimmedQuery) {
-    return [];
-  }
-
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=${encodeURIComponent(trimmedQuery)}`,
-    {
-      signal,
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Location search failed');
-  }
-
-  const data = await response.json();
-
-  return Array.isArray(data)
-    ? data.map((item) => ({
-        address: item.display_name,
-        lat: Number(item.lat),
-        lng: Number(item.lon),
-      }))
-    : [];
-};
-
-const reverseGeocode = async (latitude, longitude) => {
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-    {
-      headers: {
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Location reverse lookup failed');
-  }
-
-  const data = await response.json();
-
-  return data?.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 };
 
 export default function Dashboard() {
