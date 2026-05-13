@@ -5,7 +5,7 @@ SwiftrideX is a full-stack ride-hailing web app inspired by apps like Uber. It f
 ---
 
 ## Live Demo
-(https://swift-ride-x.vercel.app/auth)
+(https://swift-ride-x.vercel.app/)
 
 ---
 
